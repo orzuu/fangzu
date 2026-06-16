@@ -117,7 +117,7 @@
         <div class="form-group">
             <label>当前燃气表度数：</label>
             <input type="number" id="gasCurr" placeholder="请输入当前燃气表度数" step="0.01">
-            <div class="hint">公式：(当前度数 - 1367) × 3.4元/m³</div>
+            <div class="hint">公式：(当前度数 - 1374) × 3.4元/m³</div>
         </div>
     </div>
 
@@ -142,7 +142,7 @@
         const ELEC_BASE_READING = 4206.74; // 电表固定底数
         const ELECTRIC_PRICE = 0.6;        // 电费单价：0.6元/度
 
-        const GAS_BASE_READING = 1367;     // 燃气表固定底数
+        const GAS_BASE_READING = 1374;     // 燃气表固定底数
         const GAS_PRICE = 3.4;             // 燃气费单价：3.4元/m³
         // ==========================================
 
@@ -171,7 +171,7 @@
             if (elecUsage < 0) elecUsage = 0; 
             const elecTotal = elecUsage * ELECTRIC_PRICE;
 
-            // 4. 燃气费计算 (当前表 - 1367) * 3.4
+            // 4. 燃气费计算 (当前表 - 1374) * 3.4
             const gasCurr = parseFloat(document.getElementById('gasCurr').value) || GAS_BASE_READING;
             let gasUsage = gasCurr - GAS_BASE_READING;
             if (gasUsage < 0) gasUsage = 0;
