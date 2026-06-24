@@ -74,12 +74,18 @@
             line-height: 1.8;
         }
         .total-price {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: bold;
             color: #e53935;
             margin-top: 10px;
             border-top: 1px solid #ccc;
             padding-top: 10px;
+        }
+        .refund-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007aff;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -129,6 +135,7 @@
         // ==========================================
         // 配置参数区
         // ==========================================
+        const DEPOSIT = 7000;              // 押金：7000元
         const DAILY_RENT = 117;            // 房租：117元/天
         const DAILY_PROPERTY = 12.3;       // 物业费：12.3元/天
         
@@ -148,7 +155,7 @@
         // 历史公摊费用区
         // ==========================================
         const EXTRA_PROPERTY = 29.14;      // 5/1-5/31 物业分摊
-        const EXTRA_ELEC = 102.68;         // 5/1-5/31 电费分摊
+        const EXTRA_ELEC = 102.68;         // 5/1-5/30 电费分摊
         const EXTRA_GAS = 23.8;            // 4/13-6/12 燃气分摊
         // ==========================================
 
@@ -181,28 +188,29 @@
             const propertyBaseTotal = daysDiff * DAILY_PROPERTY;
             const propertyTotal = propertyBaseTotal + EXTRA_PROPERTY; // 基础物业 + 分摊
 
-            // 2. 水费计算 (当前表 - 64) * 5.54
+            // 2. 水费计算
             const waterCurr = parseFloat(document.getElementById('waterCurr').value) || WATER_BASE_READING;
             let waterUsage = waterCurr - WATER_BASE_READING;
             if (waterUsage < 0) waterUsage = 0;
             const waterTotal = waterUsage * WATER_TOTAL_PRICE;
 
-            // 3. 电费计算 (当前表 - 4206.74) * 0.6 + 分摊
+            // 3. 电费计算
             const elecCurr = parseFloat(document.getElementById('elecCurr').value) || ELEC_BASE_READING;
             let elecUsage = elecCurr - ELEC_BASE_READING;
             if (elecUsage < 0) elecUsage = 0; 
             const elecBaseTotal = elecUsage * ELECTRIC_PRICE;
             const elecTotal = elecBaseTotal + EXTRA_ELEC; // 基础电费 + 分摊
 
-            // 4. 燃气费计算 (当前表 - 1374) * 3.4 + 分摊
+            // 4. 燃气费计算
             const gasCurr = parseFloat(document.getElementById('gasCurr').value) || GAS_BASE_READING;
             let gasUsage = gasCurr - GAS_BASE_READING;
             if (gasUsage < 0) gasUsage = 0;
             const gasBaseTotal = gasUsage * GAS_PRICE;
             const gasTotal = gasBaseTotal + EXTRA_GAS; // 基础燃气 + 分摊
 
-            // 5. 总计计算
+            // 5. 总计与退款计算
             const finalTotal = rentTotal + propertyTotal + waterTotal + elecTotal + gasTotal;
+            const refundTotal = DEPOSIT - finalTotal;
 
             // 6. 渲染结果页
             const resultDiv = document.getElementById('result');
@@ -211,18 +219,20 @@
                 <div>🗓️ 结算总天数：<b>${daysDiff}</b> 天 (6/15 - ${todayMonth}/${todayDate})</div>
                 <div style="margin-left:15px;">• 房租金额：¥${rentTotal.toFixed(2)} (${DAILY_RENT}元/天)</div>
                 <div style="margin-left:15px;">• 物业金额：¥${propertyTotal.toFixed(2)}</div>
-                <div class="hint" style="margin-left:25px; margin-top:0;">*明细: 按天算¥${propertyBaseTotal.toFixed(2)} + 5月分摊¥${EXTRA_PROPERTY}</div>
+                <div class="hint" style="margin-left:25px; margin-top:0;">*明细: 按天算¥${propertyBaseTotal.toFixed(2)} + 5/1-5/31物业分摊¥${EXTRA_PROPERTY}</div>
                 
                 <div style="margin-top:8px;">💧 实际用水：<b>${waterUsage.toFixed(2)}</b> 吨 (¥${waterTotal.toFixed(2)})</div>
                 <div class="hint" style="margin-left:15px; margin-top:0;">*明细: (${waterCurr} - ${WATER_BASE_READING}) × ${WATER_TOTAL_PRICE}元/吨</div>
                 
                 <div style="margin-top:8px;">⚡ 实际用电：<b>${elecUsage.toFixed(2)}</b> 度 (总电费: ¥${elecTotal.toFixed(2)})</div>
-                <div class="hint" style="margin-left:15px; margin-top:0;">*明细: 抄表¥${elecBaseTotal.toFixed(2)} + 5月分摊¥${EXTRA_ELEC}</div>
+                <div class="hint" style="margin-left:15px; margin-top:0;">*明细: 抄表¥${elecBaseTotal.toFixed(2)} + 5/1-5/30电费¥${EXTRA_ELEC}</div>
                 
                 <div style="margin-top:8px;">🔥 实际燃气：<b>${gasUsage.toFixed(2)}</b> m³ (总燃气: ¥${gasTotal.toFixed(2)})</div>
-                <div class="hint" style="margin-left:15px; margin-top:0;">*明细: 抄表¥${gasBaseTotal.toFixed(2)} + 前期分摊¥${EXTRA_GAS}</div>
+                <div class="hint" style="margin-left:15px; margin-top:0;">*明细: 抄表¥${gasBaseTotal.toFixed(2)} + 4/13-6/12燃气费¥${EXTRA_GAS}</div>
                 
-                <div class="total-price">💵 总计应收：¥${finalTotal.toFixed(2)}</div>
+                <div class="total-price">🧾 扣除总费用：¥${finalTotal.toFixed(2)}</div>
+                <div class="refund-price">💰 最终退还金额：¥${refundTotal.toFixed(2)}</div>
+                <div class="hint" style="margin-left:5px; margin-top:0;">*计算公式: 押金 7000.00 - 总费用 ${finalTotal.toFixed(2)}</div>
             `;
             
             // 计算完自动滚动到底部方便查看结果
