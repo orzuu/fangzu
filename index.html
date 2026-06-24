@@ -47,7 +47,11 @@
             font-size: 13px;
             color: #888;
             margin-top: 5px;
-            line-height: 1.4;
+            line-height: 1.5;
+        }
+        .highlight-text {
+            color: #e53935;
+            font-weight: bold;
         }
         button {
             width: 100%;
@@ -92,152 +96,4 @@
 <body>
 
     <div class="card">
-        <h2>📅 房租与物业费 (自动计算)</h2>
-        <div class="form-group" style="background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef;">
-            <label id="daysLabel" style="margin: 0; color: #333; font-size: 16px;">正在计算天数...</label>
-        </div>
-        <div class="hint" style="margin-top: 10px;">房租：117元/天 | 基础物业：12.3元/天</div>
-    </div>
-
-    <div class="card">
-        <h2>💧 水费计算</h2>
-        <div class="form-group">
-            <label>当前水表度数：</label>
-            <input type="number" id="waterCurr" placeholder="请输入当前水表度数" step="0.01">
-            <div class="hint">公式：(当前度数 - 64) × 5.54元/吨</div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>⚡ 电费计算</h2>
-        <div class="form-group">
-            <label>当前电表度数：</label>
-            <input type="number" id="elecCurr" placeholder="请输入当前电表度数" step="0.01">
-            <div class="hint">公式：(当前度数 - 4206.74) × 0.6元/度</div>
-        </div>
-    </div>
-
-    <div class="card">
-        <h2>🔥 燃气费计算</h2>
-        <div class="form-group">
-            <label>当前燃气表度数：</label>
-            <input type="number" id="gasCurr" placeholder="请输入当前燃气表度数" step="0.01">
-            <div class="hint">公式：(当前度数 - 1374) × 3.4元/m³</div>
-        </div>
-    </div>
-
-    <button onclick="calculate()">开始计算</button>
-
-    <div id="result">
-        </div>
-
-    <script>
-        // ==========================================
-        // 配置参数区
-        // ==========================================
-        const DEPOSIT = 7000;              // 押金：7000元
-        const DAILY_RENT = 117;            // 房租：117元/天
-        const DAILY_PROPERTY = 12.3;       // 物业费：12.3元/天
-        
-        const WATER_BASE_READING = 64;     // 水表固定底数
-        const WATER_BASE = 3.69;           // 基础水费
-        const WATER_SEWAGE = 1.2;          // 污水处理费
-        const WATER_GARBAGE = 0.65;        // 垃圾处理费
-        const WATER_TOTAL_PRICE = WATER_BASE + WATER_SEWAGE + WATER_GARBAGE; // 5.54元/吨
-        
-        const ELEC_BASE_READING = 4206.74; // 电表固定底数
-        const ELECTRIC_PRICE = 0.6;        // 电费单价：0.6元/度
-
-        const GAS_BASE_READING = 1374;     // 燃气表固定底数
-        const GAS_PRICE = 3.4;             // 燃气费单价：3.4元/m³
-
-        // ==========================================
-        // 历史公摊费用区
-        // ==========================================
-        const EXTRA_PROPERTY = 29.14;      // 5/1-5/31 物业分摊
-        const EXTRA_ELEC = 102.68;         // 5/1-5/30 电费分摊
-        const EXTRA_GAS = 23.8;            // 4/13-6/12 燃气分摊
-        // ==========================================
-
-        // ==========================================
-        // 自动计算 6/15 到今天的天数
-        // ==========================================
-        const today = new Date();
-        const currentYear = today.getFullYear();
-        // 在 JS 中，月份是从 0 开始的，所以 5 代表 6 月
-        const startDate = new Date(currentYear, 5, 15); 
-        
-        // 将时间归零，确保按整天计算不产生小数偏差
-        today.setHours(0, 0, 0, 0);
-        startDate.setHours(0, 0, 0, 0);
-
-        let globalDaysDiff = Math.round((today - startDate) / (1000 * 60 * 60 * 24));
-        if (globalDaysDiff <= 0) globalDaysDiff = 1; // 最小算作1天
-
-        // 在页面上显示天数
-        const todayMonth = today.getMonth() + 1;
-        const todayDate = today.getDate();
-        document.getElementById('daysLabel').innerHTML = `自动结算天数：<b style="color:#007aff; font-size:20px;">${globalDaysDiff}</b> 天 (6/15 - ${todayMonth}/${todayDate})`;
-
-        function calculate() {
-            // 1. 使用自动计算的天数
-            const daysDiff = globalDaysDiff;
-
-            // 房租和物业费总价
-            const rentTotal = daysDiff * DAILY_RENT;
-            const propertyBaseTotal = daysDiff * DAILY_PROPERTY;
-            const propertyTotal = propertyBaseTotal + EXTRA_PROPERTY; // 基础物业 + 分摊
-
-            // 2. 水费计算
-            const waterCurr = parseFloat(document.getElementById('waterCurr').value) || WATER_BASE_READING;
-            let waterUsage = waterCurr - WATER_BASE_READING;
-            if (waterUsage < 0) waterUsage = 0;
-            const waterTotal = waterUsage * WATER_TOTAL_PRICE;
-
-            // 3. 电费计算
-            const elecCurr = parseFloat(document.getElementById('elecCurr').value) || ELEC_BASE_READING;
-            let elecUsage = elecCurr - ELEC_BASE_READING;
-            if (elecUsage < 0) elecUsage = 0; 
-            const elecBaseTotal = elecUsage * ELECTRIC_PRICE;
-            const elecTotal = elecBaseTotal + EXTRA_ELEC; // 基础电费 + 分摊
-
-            // 4. 燃气费计算
-            const gasCurr = parseFloat(document.getElementById('gasCurr').value) || GAS_BASE_READING;
-            let gasUsage = gasCurr - GAS_BASE_READING;
-            if (gasUsage < 0) gasUsage = 0;
-            const gasBaseTotal = gasUsage * GAS_PRICE;
-            const gasTotal = gasBaseTotal + EXTRA_GAS; // 基础燃气 + 分摊
-
-            // 5. 总计与退款计算
-            const finalTotal = rentTotal + propertyTotal + waterTotal + elecTotal + gasTotal;
-            const refundTotal = DEPOSIT - finalTotal;
-
-            // 6. 渲染结果页
-            const resultDiv = document.getElementById('result');
-            resultDiv.style.display = 'block'; 
-            resultDiv.innerHTML = `
-                <div>🗓️ 结算总天数：<b>${daysDiff}</b> 天 (6/15 - ${todayMonth}/${todayDate})</div>
-                <div style="margin-left:15px;">• 房租金额：¥${rentTotal.toFixed(2)} (${DAILY_RENT}元/天)</div>
-                <div style="margin-left:15px;">• 物业金额：¥${propertyTotal.toFixed(2)}</div>
-                <div class="hint" style="margin-left:25px; margin-top:0;">*明细: 按天算¥${propertyBaseTotal.toFixed(2)} + 5/1-5/31物业分摊¥${EXTRA_PROPERTY}</div>
-                
-                <div style="margin-top:8px;">💧 实际用水：<b>${waterUsage.toFixed(2)}</b> 吨 (¥${waterTotal.toFixed(2)})</div>
-                <div class="hint" style="margin-left:15px; margin-top:0;">*明细: (${waterCurr} - ${WATER_BASE_READING}) × ${WATER_TOTAL_PRICE}元/吨</div>
-                
-                <div style="margin-top:8px;">⚡ 实际用电：<b>${elecUsage.toFixed(2)}</b> 度 (总电费: ¥${elecTotal.toFixed(2)})</div>
-                <div class="hint" style="margin-left:15px; margin-top:0;">*明细: 抄表¥${elecBaseTotal.toFixed(2)} + 5/1-5/30电费¥${EXTRA_ELEC}</div>
-                
-                <div style="margin-top:8px;">🔥 实际燃气：<b>${gasUsage.toFixed(2)}</b> m³ (总燃气: ¥${gasTotal.toFixed(2)})</div>
-                <div class="hint" style="margin-left:15px; margin-top:0;">*明细: 抄表¥${gasBaseTotal.toFixed(2)} + 4/13-6/12燃气费¥${EXTRA_GAS}</div>
-                
-                <div class="total-price">🧾 扣除总费用：¥${finalTotal.toFixed(2)}</div>
-                <div class="refund-price">💰 最终退还金额：¥${refundTotal.toFixed(2)}</div>
-                <div class="hint" style="margin-left:5px; margin-top:0;">*计算公式: 押金 7000.00 - 总费用 ${finalTotal.toFixed(2)}</div>
-            `;
-            
-            // 计算完自动滚动到底部方便查看结果
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        }
-    </script>
-</body>
-</html>
+        <h2>
